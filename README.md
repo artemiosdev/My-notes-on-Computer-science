@@ -104,6 +104,16 @@ class ChessPiece(ABC):
     @abstractmethod 
     def passmove(self):
         pass
+        
+class Queen(ChessPiece):
+    def move(self):
+        print("Moved Queen to e2e4")
+ 
+    # Мы можем создать экземпляр класса
+q = Queen()
+    # И нам доступны все методы класса
+q.draw()
+q.move()
 ```
 
 ***Декомпозиция программы на модули. Менеджер контеста.***
@@ -385,6 +395,62 @@ for i, char in enumerate("HELLO"):
 3 L
 4 O
 ```
+
+***List Comprehensions***
+
+```python
+squares_2 = [i * i for i in range(10)]
+
+for i in range(len(squares_2)):
+    print(squares_2[i])
+```
+
+```bash
+0
+1
+4
+9
+16
+25
+36
+49
+64
+81
+```
+
+***Range and Arange***
+```python
+r_1 = range(10)
+
+for it in r_1:
+    print(it, end = ", ")
+    
+from numpy import arange
+
+print("Float range using NumPy arange():")
+
+print("\nTest 1:")
+for i in arange(0.0, 10.0, 0.5):
+    print(i, end=', ')
+
+print("\n\nTest 2:")
+for i in arange(-1.0, 1.0, 0.5):
+    print(i, end=', ') 
+```
+
+```bash
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9, Float range using NumPy arange():
+
+Test 1:
+0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 
+
+Test 2:
+-1.0, -0.5, 0.0, 0.5, 
+```
+
+***Со-процессинг*** — это одновременное выполнение двух процедур, одна из которых считывает вывод другой.
+***Сопроцессоры*** - тут повычисляли, и там повычисляли, тут, там и тп, т.е перебрасывание активности по сути. Параллейного программирования здесь нет. 
+
 <img alt="image" src="images/name.jpg"/>
 
 <img alt="image" src="images/name.jpg"/>
