@@ -453,10 +453,6 @@ Test 2:
 ***Со-процессинг*** — это одновременное выполнение двух процедур, одна из которых считывает вывод другой.
 ***Сопроцессоры*** - тут повычисляли, и там повычисляли, тут, там и тп, т.е перебрасывание активности по сути. Параллейного программирования здесь нет. 
 
-<img alt="image" src="images/name.jpg"/>
-
-<img alt="image" src="images/name.jpg"/>
-
 ---
 [К оглавлению](#contents)
 ###  <a id="lection3" /> Лекция №3. Параллельное программирование на Python. Многопоточность, асинхронность, Thread, Очередь/Queue, GIL
@@ -492,7 +488,56 @@ Test 2:
 
 <img alt="image" src="images/параллейность в вычислительном процессе2.jpg"/>
 
+***GIL (Global Interpreter Lock)*** - глобальная блокировка интерпретатора. В языке есть сборщик мусора и он аккуратно следит за объектами, и когда на объект нет ссылок и он уже не нужен, сборщик его съедает, предотвращая утечку памяти (memory leak). Также этот механизм осуществляет контроль в ветках выполнения процесса, и там тоже они осуществляются через чередование, то одна, то системный вызов, то другая ветка, то снова вызов, и прошлая ветка и тп. 
+
+По мнению лектора Python не сильно заточен на параллейное программирование (хотя есть библиотечные решения), есть языки которые имеют большую ориентированность на него и в самом языке это больше встроено (С++, Go, Kotlin, Rust)
+
+!!! Глобальные переменные это зло для параллейного программирования, это та самая скрытая критическая зона !!!
+
+В Питоне есть отдельные библиотеки для нитей [_thread](https://docs.python.org/3/library/_thread.html) и [threading](https://docs.python.org/3/library/threading.html). Поток и процесс. Создание нитей (потоков) и процессов.
+
 ```python
+import _thread
+import time
+
+# Define a function for the thread
+def print_time(threadName, delay):
+   count = 0
+   while count < 5:
+      time.sleep(delay)
+      count += 1
+      print("%s: %s" % (threadName, time.ctime(time.time())))
+
+# Create two threads as follows
+try:
+   _thread.start_new_thread(print_time, ("Thread-1", 2,))
+   _thread.start_new_thread(print_time, ("Thread-2", 4,))
+except:
+   print("Error: unable to start thread")
+
+while 1:
+   pass
+```
+
+```bash
+Thread-1: Fri Jul 29 11:26:09 2022
+Thread-2: Fri Jul 29 11:26:11 2022
+Thread-1: Fri Jul 29 11:26:11 2022
+Thread-1: Fri Jul 29 11:26:13 2022
+Thread-2: Fri Jul 29 11:26:15 2022
+Thread-1: Fri Jul 29 11:26:15 2022
+Thread-1: Fri Jul 29 11:26:17 2022
+Thread-2: Fri Jul 29 11:26:19 2022
+Thread-2: Fri Jul 29 11:26:23 2022
+Thread-2: Fri Jul 29 11:26:27 2022
+```
+
+1:42
+```python
+
+```
+
+```bash
 
 ```
 
@@ -500,11 +545,17 @@ Test 2:
 
 ```
 
+```bash
+
+```
+
 ```python
 
 ```
 
+```bash
 
+```
 <img alt="image" src="images/name.jpg"/>
 
 <img alt="image" src="images/name.jpg"/>
@@ -520,6 +571,22 @@ Test 2:
 
 
 ```python
+
+```
+
+```python
+
+```
+
+```bash
+
+```
+
+```python
+
+```
+
+```bash
 
 ```
 
