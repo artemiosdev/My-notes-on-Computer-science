@@ -538,14 +538,36 @@ Thread-2: Fri Jul 29 11:26:27 2022
 [К оглавлению](#contents)
 ###  <a id="lection4" /> Лекция №4. Скорость вычислений на Python.  Мультипроцессность/ multiprocessing, родительский процесс, дочерний процесс, очередь/queue. 
 
-Лекция носит практический характер, используются библиотеки и производится сравнение скорости вычислений. 
+Лекция носит практический характер, используются библиотеки для параллейности процессов и производится сравнение скорости вычислений. 
 
 1) надо подумать что будем считать, и выбрать самый оптимальный и быстрый алгоритм
 2) возможно применить параллейное программирование если оно возможно и уместно
-3) или использовать связки с очень быстрыми языками (запуск Python, а выполнение алгоритма на C и C++)
+3) или использовать связки с очень быстрыми языками (запуск Python, с алгоритмом на C и C++)
 4) использовать динамическое программирование
 
-Рассмотрим скорость на примере вычисления 40 первых чисел Фибоначчи. На Python в зависимости от реализации это ~30 сек, на C++ это 1-2 секунды, методом динамического программирования на Python это 0.2 сек. Скорость зависит от методом и алгоритма вычисления. 
+Рассмотрим скорость на примере вычисления 40 первых чисел Фибоначчи. На Python в зависимости от реализации это ~30 секунд, на C++ это 1-2 секунды, методом динамического программирования на Python это 0.2 сек. Скорость зависит от метода реализации и алгоритма вычисления. 
+
+Замеры лектора, на стареньком i5 2 ядра, 4 потока.
+
+Один процесс на Python: 58.11 секунд
+
+40 процессов - по одному на каждое число: 36.67 секунд
+
+С очередями: 
+
+4 процесса 34.94 секунд
+
+2 процесса 37.40 секунд
+
+Пул из 4 процессов: 34.87 секунд
+
+На С++: 1.25 секунд
+
+На питоне динамическим программированием: 0.03 секунд
+
+С использованием JIT-компилятора Numba (последний пример кода ниже): 2.12 секунд
+
+У меня относительно схожие результаты, но я тестил код в браузере (который конечно замедляет относительно консоли) в https://replit.com/ и https://www.onlinegdb.com/online_python_compiler 
 
 ***Метод динамического программирования***
 ```python
@@ -601,6 +623,344 @@ for i in range(0, final_fibonacci_number + 1):
 102334155
 ```
 
+---
+
+Никаких параллельных вычислений
+```python
+import time
+
+final_fibonacci_number = 40
+def fib(n: int) -> int:
+    return fib(n-1) + fib(n-2) if n > 2 else 1
+    
+def main():
+    tasks = list(range(0, final_fibonacci_number + 1))
+    start_time = time.perf_counter()
+    # Никаких параллельных вычислений! Работаем сами:
+    answers = []
+    for number in tasks:
+        answers.append(fib(number))
+    # Работает один родительский процесс по-прежнему.
+    finish_time = time.perf_counter()
+    print("Duration:", finish_time - start_time)
+    
+    print(*answers)
+    
+if __name__ == '__main__':
+    main()
+```
+
+```bash
+Duration: 54.08748500799993
+1 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765 10946 17711 28657 46368 75025 121393 196418 317811 514229 832040 1346269 2178309 3524578 5702887 9227465 14930352 24157817 39088169 63245986 102334155
+```
+
+---
+
+С процессами
+```python
+from multiprocessing import Process, Queue
+import os
+import time
+
+final_fibonacci_number = 40
+
+def worker(task: int, process_index: int):
+    def fib(n: int) -> int:
+        return fib(n-1) + fib(n-2) if n > 2 else 1
+    
+    number = task
+    answer = fib(number)
+    print(f"worker {process_index}, PID={os.getpid()}: fib({number}) = {answer}")
+    
+def main():
+    tasks = []
+    for n in range(0, final_fibonacci_number + 1):
+        tasks.append(n)
+
+    workers = []
+    for process_index in range(final_fibonacci_number + 1):
+        worker_process = Process(target=worker, args=(tasks[process_index],
+                                                      process_index,))
+        workers.append(worker_process)
+    print("Parent process prepared all the tasks.")
+
+    start_time = time.perf_counter()
+    for worker_process in workers:
+        worker_process.start()
+    print("Parent process started workers processes.")
+
+    for worker_process in workers:
+        worker_process.join()
+    finish_time = time.perf_counter()
+    print("Parent process joined all the workers processes. Duration:",
+          finish_time - start_time)
+    
+if __name__ == '__main__':
+    main()
+```
+
+```bash
+Parent process prepared all the tasks.
+worker 1, PID=1699: fib(1) = 1
+worker 0, PID=1698: fib(0) = 1
+worker 3, PID=1701: fib(3) = 2
+worker 2, PID=1700: fib(2) = 1
+worker 4, PID=1702: fib(4) = 3
+worker 6, PID=1704: fib(6) = 8
+worker 5, PID=1703: fib(5) = 5
+worker 7, PID=1705: fib(7) = 13
+worker 9, PID=1707: fib(9) = 34
+worker 8, PID=1706: fib(8) = 21
+worker 12, PID=1710: fib(12) = 144
+worker 11, PID=1709: fib(11) = 89
+worker 13, PID=1711: fib(13) = 233
+worker 10, PID=1708: fib(10) = 55
+worker 14, PID=1712: fib(14) = 377
+worker 16, PID=1714: fib(16) = 987
+worker 15, PID=1713: fib(15) = 610
+worker 19, PID=1717: fib(19) = 4181
+worker 20, PID=1718: fib(20) = 6765
+worker 17, PID=1715: fib(17) = 1597
+worker 22, PID=1720: fib(22) = 17711
+worker 23, PID=1721: fib(23) = 28657
+worker 18, PID=1716: fib(18) = 2584
+worker 21, PID=1719: fib(21) = 10946
+worker 24, PID=1722: fib(24) = 46368
+Parent process started workers processes.
+worker 25, PID=1723: fib(25) = 75025
+worker 27, PID=1725: fib(27) = 196418
+worker 26, PID=1724: fib(26) = 121393
+worker 28, PID=1726: fib(28) = 317811
+worker 29, PID=1727: fib(29) = 514229
+worker 30, PID=1728: fib(30) = 832040
+worker 31, PID=1729: fib(31) = 1346269
+worker 32, PID=1730: fib(32) = 2178309
+worker 33, PID=1731: fib(33) = 3524578
+worker 34, PID=1732: fib(34) = 5702887
+worker 35, PID=1733: fib(35) = 9227465
+worker 36, PID=1734: fib(36) = 14930352
+worker 37, PID=1735: fib(37) = 24157817
+worker 38, PID=1736: fib(38) = 39088169
+worker 39, PID=1737: fib(39) = 63245986
+worker 40, PID=1738: fib(40) = 102334155
+Parent process joined all the workers processes. Duration: 64.41719395000018
+```
+
+---
+
+Очереди
+```python
+from multiprocessing import Process, Queue
+import os
+import time
+
+workers_number = 2
+final_fibonacci_number = 40
+
+def worker(tasks: Queue, answers: Queue, process_index: int):
+    def fib(n: int) -> int:
+        return fib(n-1) + fib(n-2) if n > 2 else 1
+    
+    while not tasks.empty():  # пока очередь не пуста выполняем одну очередную задачу
+        number = tasks.get()
+        answer = fib(number)
+        answers.put((process_index, os.getpid(), number, answer,))
+        #print(f"worker {process_index}, PID={os.getpid()}: fib({number}) = {answer}")
+    
+def main():
+    tasks = Queue()
+    answers = Queue()
+    for n in range(1, final_fibonacci_number + 1):
+        tasks.put(n)
+
+    workers = []
+    for process_index in range(workers_number):
+        worker_process = Process(target = worker,
+                                 args = (tasks, answers, process_index,))
+        workers.append(worker_process)
+    print("Parent process queued all the tasks.")
+
+    start_time = time.perf_counter()
+    for worker_process in workers:
+        worker_process.start()
+    print("Parent process started workers processes.")
+
+    for worker_process in workers:
+        worker_process.join()
+    # Всё, тут мы вышли из режима многозадачности. Работает один родительский процесс.
+    finish_time = time.perf_counter()
+    print("Parent process joined all the workers processes. Duration:",
+          finish_time - start_time)
+
+    # Отладочная распечатка результатов
+    ordered_answers = []
+    while not answers.empty():
+        process_index, PID, number, answer = answers.get()
+        ordered_answers.append((number, answer,))
+        print(f"worker {process_index}, PID={PID}: fib({number}) = {answer}")
+
+    # Красивая распечатка полученных результатов:
+    ordered_answers.sort()
+    print(*(answer for number, answer in ordered_answers))
+    
+if __name__ == '__main__':
+    main()
+```
+
+```bash
+Parent process queued all the tasks.
+Parent process started workers processes.
+Parent process joined all the workers processes. Duration: 50.01943492200007
+worker 0, PID=1467: fib(1) = 1
+worker 0, PID=1467: fib(2) = 1
+worker 0, PID=1467: fib(3) = 2
+worker 0, PID=1467: fib(4) = 3
+worker 0, PID=1467: fib(5) = 5
+worker 0, PID=1467: fib(6) = 8
+worker 0, PID=1467: fib(7) = 13
+worker 0, PID=1467: fib(8) = 21
+worker 0, PID=1467: fib(9) = 34
+worker 0, PID=1467: fib(10) = 55
+worker 0, PID=1467: fib(11) = 89
+worker 0, PID=1467: fib(12) = 144
+worker 0, PID=1467: fib(13) = 233
+worker 0, PID=1467: fib(14) = 377
+worker 0, PID=1467: fib(16) = 987
+worker 0, PID=1467: fib(17) = 1597
+worker 0, PID=1467: fib(18) = 2584
+worker 0, PID=1467: fib(19) = 4181
+worker 1, PID=1468: fib(15) = 610
+worker 1, PID=1468: fib(20) = 6765
+worker 0, PID=1467: fib(22) = 17711
+worker 1, PID=1468: fib(21) = 10946
+worker 1, PID=1468: fib(23) = 28657
+worker 0, PID=1467: fib(24) = 46368
+worker 1, PID=1468: fib(25) = 75025
+worker 0, PID=1467: fib(26) = 121393
+worker 1, PID=1468: fib(27) = 196418
+worker 0, PID=1467: fib(28) = 317811
+worker 1, PID=1468: fib(29) = 514229
+worker 0, PID=1467: fib(30) = 832040
+worker 1, PID=1468: fib(31) = 1346269
+worker 0, PID=1467: fib(32) = 2178309
+worker 1, PID=1468: fib(33) = 3524578
+worker 0, PID=1467: fib(34) = 5702887
+worker 1, PID=1468: fib(35) = 9227465
+worker 0, PID=1467: fib(36) = 14930352
+worker 1, PID=1468: fib(37) = 24157817
+worker 0, PID=1467: fib(38) = 39088169
+worker 1, PID=1468: fib(39) = 63245986
+worker 0, PID=1467: fib(40) = 102334155
+1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765 10946 17711 28657 46368 75025 121393 196418 317811 514229 832040 1346269 2178309 3524578 5702887 9227465 14930352 24157817 39088169 63245986 102334155
+```
+
+---
+
+Параллейные вычисления, используем Pool
+```python
+from multiprocessing import Pool
+import os
+import time
+
+workers_number = 4
+final_fibonacci_number = 40
+
+def fib(n: int) -> int:
+    return fib(n-1) + fib(n-2) if n > 2 else 1 
+
+def main():
+    tasks = list(range(1, final_fibonacci_number + 1))
+    start_time = time.perf_counter()
+    # Уход в паралельные вычисления:
+    with Pool(workers_number) as pool_of_processes:
+        answers = list(pool_of_processes.map(fib, tasks))
+    # Всё, тут мы вышли из режима многозадачности. Работает один родительский процесс.
+    finish_time = time.perf_counter()
+    print("Duration:", finish_time - start_time)
+    
+    print(*answers)
+    
+if __name__ == '__main__':
+    main()
+```
+
+```bash
+Duration: 47.05507841299914
+1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765 10946 17711 28657 46368 75025 121393 196418 317811 514229 832040 1346269 2178309 3524578 5702887 9227465 14930352 24157817 39088169 63245986 102334155
+```
+
+---
+C++
+```C++
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int64_t final_fibonacci_number = 40;
+
+int64_t fib(int64_t number)
+{
+    return (number > 2)? fib(number - 1) + fib(number - 2) : 1;
+}
+
+int main()
+{
+    vector<int64_t> tasks;
+    for(int i = 0; i < final_fibonacci_number + 1; i++)
+        tasks.push_back(i);
+    vector<int64_t> answers;
+    for(int i = 0; i < final_fibonacci_number + 1; i++)
+        answers.push_back(fib(tasks[i]));
+    for(auto answer: answers) {
+        cout << answer << ' ';
+    }
+    cout << endl;
+
+    return 0;
+}
+```
+
+```bash
+1 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765 10946 17711 28657 46368 75025 121393 196418 317811 514229 832040 1346269 2178309 3524578 5702887 9227465 14930352 24157817 39088169 63245986 102334155
+```
+
+---
+С использованием JIT-компилятора Numba
+
+```python
+from numba import jit
+import time
+
+final_fibonacci_number = 40
+
+@jit(nopython=True)
+def fib(n: int) -> int:
+    return fib(n-1) + fib(n-2) if n > 2 else 1
+    
+
+def main():
+    tasks = list(range(0, final_fibonacci_number + 1))
+    start_time = time.perf_counter()
+    # Никаких параллельных вычислений! Работаем сами:
+    answers = []
+    for number in tasks:
+        answers.append(fib(number))
+    # Работает один родительский процесс по-прежнему.
+    finish_time = time.perf_counter()
+    print("Duration:", finish_time - start_time)
+    
+    print(*answers)
+    
+if __name__ == '__main__':
+    main()
+```
+
+```bash
+Duration: 13.37228933199367
+1 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765 10946 17711 28657 46368 75025 121393 196418 317811 514229 832040 1346269 2178309 3524578 5702887 9227465 14930352 24157817 39088169 63245986 102334155
+```
+
 ```python
 
 ```
@@ -609,29 +969,6 @@ for i in range(0, final_fibonacci_number + 1):
 
 ```
 
-```python
-
-```
-
-```bash
-
-```
-
-```python
-
-```
-
-```bash
-
-```
-
-```python
-
-```
-
-```bash
-
-```
 <img alt="image" src="images/name.jpg"/>
 
 <img alt="image" src="images/name.jpg"/>
@@ -644,6 +981,10 @@ for i in range(0, final_fibonacci_number + 1):
 
 
 ```python
+
+```
+
+```bash
 
 ```
 
