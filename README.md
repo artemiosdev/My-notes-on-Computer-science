@@ -18,6 +18,12 @@
 - [Лекция №3. Параллельное программирование на Python. Многопоточность, асинхронность, Thread, Очередь/Queue, GIL.](#lection3)
 - [Лекция №4. Скорость вычислений на Python.  Мультипроцессность/ multiprocessing, родительский процесс, дочерний процесс, очередь/queue.](#lection4)
 
+### Cronis Computer Science
+- [Лекция 01. Двоичная система счисления](#cronis-lection1)
+- [Лекция 02. ](#cronis-lection2)
+- [Лекция 03. ](#cronis-lection3)
+- [Лекция 04. ](#cronis-lection4)
+
 ---
 [К оглавлению](#contents)
 ###  <a id="lection1" /> Лекция №1. SOLID-принципы. Введение в ООП на Python
@@ -967,6 +973,50 @@ Duration: 13.37228933199367
 
 Данная лекция носила сугубо практический характер, ничего нового для себя не нашел, много о командной оболочке bash и zsh, у меня есть в другом конспекте [The Command Line and Terminal](https://github.com/artemiosdev/Command-Line-Bash-Zsh)
 
-
 ---
 [К оглавлению](#contents)
+### Cronis Computer Science
+### <a id="cronis-lection1" /> Лекция 01. Двоичная система счисления
+
+<img alt="image" src="images/Двоичная система счисления 1.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 2.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 3.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 4.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 5.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 6.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 7.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 8.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 9.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 10.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 11.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления 12.jpg"/>
+
+Процессор не умеет производить вычитание двоичных чисел, потому что это долтаточно сложно и трудоемко. Процесс вычитания у него заменен на более простой механизм.
+
+<img alt="image" src="images/Двоичная система счисления.jpg"/>
+
+<img alt="image" src="images/Двоичная система счисления.jpg"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
